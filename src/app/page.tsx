@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Menu, 
   X, 
@@ -30,11 +30,31 @@ import {
   Building2, 
   Headset, 
   Clock, 
-  FileCheck2 
+  FileCheck2,
+  ChevronDown
 } from 'lucide-react';
 
+// 自訂 Facebook SVG 圖示組件，避免依賴外部第三方品牌套件
+function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg 
+      viewBox="0 0 24 24" 
+      width="24" 
+      height="24" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      fill="none" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      {...props}
+    >
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-4h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+
 // ==========================================
-// 1. 全站品牌設定與資料集 (Data & Configuration)
+// 1. 全站品牌設定與資料集
 // ==========================================
 const siteConfig = {
   name: '資治資訊股份有限公司',
@@ -46,6 +66,7 @@ const siteConfig = {
     phone: '04-23387523',
     lineId: '@comstory',
     lineUrl: 'https://lin.ee/6Eyy7Fr',
+    facebookUrl: 'https://www.facebook.com/zizhi.tech/',
     serviceAreas: ['台灣全區', '大陸廠區支援', '東南亞海外據點'],
   },
 };
@@ -71,7 +92,7 @@ const heroData = {
   titleMain: '打通工業設備數據孤島',
   titleHighlight: '實現 OT 與 IT 系統無縫接軌',
   description: '深耕工業自動化 30 年。提供開放式「萬能儀器驅動開發」與「零限制資料庫對接」。跨越 GPIB、RS-232/485、EtherNet 等介面，為企業打造極致穩定的智慧工廠數據基石。',
-  primaryCtaText: '預約架構師諮詢',
+  primaryCtaText: '預約技術諮詢',
   primaryCtaHref: '#contact',
   secondaryCtaText: '檢視四大解決方案',
   secondaryCtaHref: '#solutions',
@@ -166,7 +187,7 @@ const solutionsList = [
     icon: Boxes,
     imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
     tagline: 'ReelChecker 對料追溯 ╳ 100% 錯件防呆 ╳ 全履歷管控',
-    description: '整合條碼槍、標籤印表機、X-Ray 點料機、自動倉儲與 SMT 產線。針對錫膏、鋼板、MSL 烘烤元件提供精密防錯與生產履歷追溯。',
+    description: '整合LCR 量測儀器、視覺背文檢測設備、X-Ray 點料機、自動倉儲與 SMT 產線。針對錫膏、鋼板、MSL 烘烤元件提供精密防錯與生產履歷追溯。',
     guarantees: [
       'ReelChecker SMT 量測對料系統，徹底防範換料錯件風險',
       '錫膏/紅膠獨一碼 (ID) 管控，自動卡關開罐 7 天失效與回溫時數',
@@ -175,12 +196,12 @@ const solutionsList = [
     ],
     verifiedCases: [
       'SMT 產線量測對料追溯系統 (ReelChecker System)',
-      '錫膏/紅膠管理系統與對料 1-0 站自動比對',
+      '錫膏/紅膠管理系統 (保存、回溫、使用期限...等管理)',
       '鋼板管理系統（對接 BOM 表與產線電子看板）',
       'MSL 濕敏元件烘烤紀錄與 SMT 產線時程防呆整合',
       '料捲管理搭配 X-Ray 點料 (PSA 系統) 自動倉儲進出庫'
     ],
-    protocols: ['CIMES MES 對接', 'PostgreSQL', 'Oracle', '條碼/二維碼掃描', 'WIFI/藍芽工業槍']
+    protocols: ['MES 對接', 'PostgreSQL', 'Oracle', '條碼/二維碼掃描', 'WIFI/藍芽工業槍']
   },
   {
     id: 'mes-sfcs-scheduling',
@@ -213,12 +234,12 @@ const solutionsList = [
     title: '專用廠務監控與數據視覺化分析',
     subtitle: 'Factory Operations & Analytics',
     icon: Database,
-    imageUrl: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
     tagline: '彈性底層 DB 架構 ╳ 圖像化曲線分析 ╳ 自動預警提示',
     description: '針對廠務環境、電源、烤箱與資產儲位進行全天候監控。提供多曲線對齊分析演算法（自動計算收斂值、斜率與面積）與 Email 自動提示。',
     guarantees: [
       '資料庫架構零限制：PostgreSQL, Oracle, MS SQL, MySQL 或 Log 檔',
-      '支援高達 13 條溫度曲線同步位移對齊與區域放大分析',
+      '支援生產數據轉換成生產曲線圖形化分析',
       '單一工業電腦串接 48 台電源與 14 台烤箱，精度達小數點下 3 位',
       '廠區 樓層/區域 儲位地圖管理與設備保養/校驗提前通知'
     ],
@@ -282,12 +303,12 @@ const casesData = [
   },
   {
     id: 'temperature-curve-analytics',
-    title: '廠務烤箱與 13 條溫度曲線同步對齊分析系統',
+    title: '工業自動化的熱處理管理系統',
     category: '廠務視覺化分析',
     industry: '精密熱處理 / 實驗室廠務',
-    imageUrl: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80',
-    problem: 'PLC 人機匯出的溫度 Excel 資料時間起點不一，多條曲線難以橫向比對，且無法自動計算收斂值與熱量累積面積。',
-    solution: '開發專用溫度紀錄查詢系統，支援資料時間位移補償與 13 條曲線同步繪製，並內建數學演算自動計算斜率、面積與收斂區間。',
+    imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
+    problem: '難以精準定位產品瑕疵對應的製程階段與異常溫度條件',
+    solution: '當產品發生品質異常時，可透過歷史生產資訊回溯功能，精準調閱該批次生產時的溫度曲線，即時判定製程是否存在偏離，提供科學證據以快速回應客戶訴求。',
     hardware: ['PostgreSQL 資料庫', 'PLC 人機介面 Excel 對接', '數據位移對齊演算法'],
     impactHighlight: '分析效率提升 80%',
     impacts: [
@@ -299,7 +320,7 @@ const casesData = [
 ];
 
 const ctaContent = {
-  badge: 'DIRECT ARCHITECT CONSULTATION',
+  badge: 'DIRECT TECHNICAL CONSULTATION',
   title: '先從設備與數據打通開始',
   description: '歡迎與資治資訊討論您的現場整合需求。無論是舊型儀器串接、SMT 物料對料防錯、MES 站點對接或廠務數據分析，我們將協助您評估最適合的導入方式。',
   lineId: '@comstory',
@@ -310,7 +331,7 @@ const ctaContent = {
     { 
       icon: Clock, 
       title: '24 小時快速回覆', 
-      desc: '由專業工業軟體架構師親自為您評估可行性' 
+      desc: '由專業工業軟體團隊親自為您評估可行性' 
     },
     { 
       icon: Sliders, 
@@ -325,6 +346,9 @@ const ctaContent = {
   ]
 };
 
+// 圖片載入失敗時的預設備援圖
+const fallbackImageUrl = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80';
+
 // ==========================================
 // 2. 輔助版心 Container 組件
 // ==========================================
@@ -337,7 +361,7 @@ function Container({ children, className = '' }: { children: React.ReactNode; cl
 }
 
 // ==========================================
-// 3. 獨立區塊組件定義 (Sub-components)
+// 3. 各區塊組件
 // ==========================================
 
 function Header() {
@@ -346,8 +370,6 @@ function Header() {
   return (
     <header className="border-b border-slate-800/80 bg-[#070d19]/90 backdrop-blur-md fixed top-0 w-full z-50">
       <Container className="h-16 flex items-center justify-between">
-        
-        {/* Logo 標誌區域 */}
         <a href="#" className="flex items-center gap-3 group">
           <div className="relative bg-[#2A4343]/80 border border-slate-700 p-2 rounded-lg flex items-center justify-center shadow-md shadow-slate-950 group-hover:border-[#EA9512] transition">
             <span className="text-xl font-black text-white font-serif leading-none italic">C</span>
@@ -363,7 +385,6 @@ function Header() {
           </div>
         </a>
 
-        {/* 桌機版選單 */}
         <nav className="hidden md:flex items-center gap-8 text-sm text-slate-300 font-medium">
           {mainNavigation.map((item) => (
             <a
@@ -381,17 +402,15 @@ function Header() {
           ))}
         </nav>
 
-        {/* 右側預約諮詢按鈕 */}
         <div className="hidden md:flex items-center gap-4">
           <a
             href="#contact"
             className="bg-[#EA9512] hover:bg-amber-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition shadow-lg shadow-amber-500/20 flex items-center gap-1.5"
           >
-            預約架構評估 <ChevronRight className="w-4 h-4" />
+            預約技術評估 <ChevronRight className="w-4 h-4" />
           </a>
         </div>
 
-        {/* 手機版選單開關 */}
         <button
           className="md:hidden text-slate-300 p-2"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -401,7 +420,6 @@ function Header() {
         </button>
       </Container>
 
-      {/* 手機版下拉選單 */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-slate-900 border-b border-slate-800 px-6 py-4 space-y-3">
           {mainNavigation.map((item) => (
@@ -419,7 +437,7 @@ function Header() {
             onClick={() => setMobileMenuOpen(false)}
             className="block text-center bg-[#EA9512] text-slate-950 font-bold py-2.5 rounded-lg text-sm mt-2"
           >
-            預約架構評估
+            預約技術評估
           </a>
         </div>
       )}
@@ -484,6 +502,7 @@ function HeroSection() {
             <img 
               src="https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=1200&q=80" 
               alt="資治資訊工業自動化與儀器設備連通現場"
+              onError={(e) => { (e.target as HTMLImageElement).src = fallbackImageUrl; }}
               className="w-full h-[420px] object-cover object-center group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#070d19] via-[#070d19]/40 to-transparent"></div>
@@ -529,21 +548,43 @@ function HeroSection() {
 
 function PainPointsSection() {
   return (
-    <section className="py-20 md:py-28 bg-[#030712] text-slate-100 relative overflow-hidden border-b border-slate-800/80">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-rose-500/5 blur-[160px] rounded-full pointer-events-none"></div>
+    <section className="py-20 md:py-28 bg-white text-slate-900 relative overflow-hidden border-b border-slate-200">
+      
+      {/* 1. 淡淡的電流與電路板脈絡 SVG 線條 */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <svg 
+          className="absolute inset-0 w-full h-full opacity-[0.06] stroke-slate-900" 
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <pattern id="current-circuit-pattern" width="160" height="120" patternUnits="userSpaceOnUse">
+              <path d="M0 20 h50 l20 20 h90 M160 80 h-40 l-20-20 h-100 M60 0 v30 l15 15 v75 M110 120 v-35 l-15-15 v-70" fill="none" stroke="#0284c7" strokeWidth="1.2" strokeLinecap="round" />
+              <path d="M10 100 h35 l15 -15 v-25" fill="none" stroke="#d97706" strokeWidth="1" strokeDasharray="3 3" />
+              <circle cx="70" cy="40" r="3" fill="#0284c7" />
+              <circle cx="100" cy="60" r="2.5" fill="#d97706" />
+              <circle cx="75" cy="45" r="2" fill="#0284c7" />
+              <circle cx="95" cy="70" r="2" fill="#0284c7" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#current-circuit-pattern)" />
+        </svg>
+
+        <div className="absolute top-1/4 -left-20 w-80 h-80 bg-cyan-500/5 blur-[100px] rounded-full"></div>
+        <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-amber-500/5 blur-[100px] rounded-full"></div>
+      </div>
 
       <Container className="relative z-10 space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-rose-500/30 text-[#D9261C] text-xs font-mono tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-[#D9261C] text-xs font-mono tracking-wide font-bold">
             <AlertTriangle className="w-3.5 h-3.5 text-[#D9261C]" />
             {painPointsData.badge}
           </div>
           
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
             {painPointsData.title}
           </h2>
           
-          <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
             {painPointsData.description}
           </p>
         </div>
@@ -554,33 +595,33 @@ function PainPointsSection() {
             return (
               <div 
                 key={item.id}
-                className="group relative bg-slate-900/60 border border-slate-800 hover:border-rose-500/40 p-6 rounded-2xl transition-all duration-300 backdrop-blur hover:shadow-xl hover:shadow-rose-950/20 flex flex-col justify-between"
+                className="group relative bg-white/80 backdrop-blur border border-slate-200/90 hover:border-rose-400 p-6 rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/80 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800/60">
-                    <span className="text-xs font-mono font-bold text-slate-500 group-hover:text-[#EA9512] transition">
+                  <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200/80">
+                    <span className="text-xs font-mono font-bold text-slate-400 group-hover:text-[#EA9512] transition">
                       PAIN POINT {item.id}
                     </span>
-                    <span className="text-[10px] font-mono bg-rose-950/60 text-rose-400 border border-rose-900/50 px-2 py-0.5 rounded font-semibold">
+                    <span className="text-[10px] font-mono bg-rose-100 text-rose-700 border border-rose-200 px-2 py-0.5 rounded font-bold">
                       {item.tag}
                     </span>
                   </div>
 
                   <div className="flex items-start gap-3.5 mb-3">
-                    <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-rose-400 group-hover:bg-rose-500/10 group-hover:border-rose-500/30 transition flex-shrink-0">
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-rose-600 group-hover:bg-rose-50 group-hover:border-rose-200 transition flex-shrink-0 shadow-sm">
                       <IconComponent className="w-5 h-5" />
                     </div>
-                    <h3 className="text-lg font-bold text-white group-hover:text-rose-200 transition leading-snug pt-0.5">
+                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-rose-600 transition leading-snug pt-0.5">
                       {item.title}
                     </h3>
                   </div>
 
-                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed pl-[46px]">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed pl-[46px]">
                     {item.desc}
                   </p>
                 </div>
 
-                <div className="pt-6 mt-4 pl-[46px] flex items-center gap-1.5 text-[11px] font-mono text-slate-500 group-hover:text-amber-400 transition">
+                <div className="pt-6 mt-4 pl-[46px] flex items-center gap-1.5 text-[11px] font-mono font-bold text-slate-400 group-hover:text-amber-600 transition">
                   <span>資治解決方案預備中</span>
                   <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -589,18 +630,18 @@ function PainPointsSection() {
           })}
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur">
+        <div className="bg-white/90 border border-slate-200/90 backdrop-blur rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-[#EA9512] animate-pulse"></div>
-            <p className="text-xs sm:text-sm text-slate-300 font-medium">
+            <p className="text-xs sm:text-sm text-slate-700 font-bold">
               這些現場痛點正在影響您的生產良率與稼動率嗎？
             </p>
           </div>
           <a
             href="#solutions"
-            className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-[#EA9512] font-bold px-4 py-2.5 rounded-xl border border-amber-500/30 text-xs transition whitespace-nowrap"
+            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition whitespace-nowrap shadow-md"
           >
-            檢視資治對應解決方案 <ArrowRight className="w-3.5 h-3.5" />
+            檢視資治對應解決方案 <ArrowRight className="w-3.5 h-3.5 text-[#EA9512]" />
           </a>
         </div>
       </Container>
@@ -611,59 +652,69 @@ function PainPointsSection() {
 function SolutionsOverviewSection() {
   const [activeTab, setActiveTab] = useState('instrumentation-connectivity');
   const selectedSolution = solutionsList.find(s => s.id === activeTab) || solutionsList[0];
+  
+  // 錨點參考：用於手機模式下平滑滾動至詳細資料區塊
+  const detailPanelRef = useRef<HTMLDivElement>(null);
+
+  // 切換方案，且當螢幕寬度屬於行動端 (<1024px) 時自動滑動至下方詳細資料
+  const handleSolutionSelect = (id: string) => {
+    setActiveTab(id);
+    if (window.innerWidth < 1024 && detailPanelRef.current) {
+      detailPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
-    <section id="solutions" className="py-20 md:py-28 bg-[#070d19] text-slate-100 relative overflow-hidden border-b border-slate-800/80">
-      <div className="absolute top-1/3 left-0 w-[500px] h-[500px] bg-amber-500/5 blur-[150px] rounded-full pointer-events-none"></div>
-
+    <section id="solutions" className="py-20 md:py-28 bg-[#f8fafc] text-slate-900 relative overflow-hidden border-b border-slate-200">
       <Container className="relative z-10 space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-amber-500/30 text-[#EA9512] text-xs font-mono tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-[#EA9512] text-xs font-mono tracking-wide font-bold">
             <Zap className="w-3.5 h-3.5 text-[#EA9512]" />
-            CORE SOLUTIONS MATRIX
+            CORE SOLUTIONS
           </div>
           
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            四大核心解決方案矩陣
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            四大核心解決方案
           </h2>
           
-          <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-            以<span className="text-[#EA9512] font-semibold">「工業自動化與儀器設備連通」</span>為旗艦核心，資治資訊提供開放、彈性且具備真實落地能力的系統整合服務。
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
+            以<span className="text-[#EA9512] font-extrabold">「工業自動化與儀器設備連通」</span>為旗艦核心，資治資訊提供開放、彈性且具備真實落地能力的系統整合服務。
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl flex items-center gap-3 backdrop-blur">
-            <div className="bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/30 text-[#EA9512] flex-shrink-0">
+          <div className="bg-white border border-slate-200 p-4 rounded-xl flex items-center gap-3 shadow-sm">
+            <div className="bg-amber-50 p-2.5 rounded-lg border border-amber-200 text-[#EA9512] flex-shrink-0">
               <Sliders className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs font-bold text-white">不限儀器廠牌型號</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">提供通訊規格，經測試 100% 串接</div>
+              <div className="text-xs font-bold text-slate-900">不限儀器廠牌型號</div>
+              <div className="text-[11px] text-slate-500 mt-0.5">提供通訊規格，經測試 100% 串接</div>
             </div>
           </div>
 
-          <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl flex items-center gap-3 backdrop-blur">
-            <div className="bg-cyan-500/10 p-2.5 rounded-lg border border-cyan-500/30 text-cyan-400 flex-shrink-0">
+          <div className="bg-white border border-slate-200 p-4 rounded-xl flex items-center gap-3 shadow-sm">
+            <div className="bg-cyan-50 p-2.5 rounded-lg border border-cyan-200 text-cyan-600 flex-shrink-0">
               <Server className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs font-bold text-white">零限制資料庫架構</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">支援 PostgreSQL, Oracle, MS SQL, CSV</div>
+              <div className="text-xs font-bold text-slate-900">零限制資料庫架構</div>
+              <div className="text-[11px] text-slate-500 mt-0.5">支援 PostgreSQL, Oracle, MS SQL, CSV</div>
             </div>
           </div>
 
-          <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xl flex items-center gap-3 backdrop-blur">
-            <div className="bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/30 text-[#D9261C] flex-shrink-0">
+          <div className="bg-white border border-slate-200 p-4 rounded-xl flex items-center gap-3 shadow-sm">
+            <div className="bg-rose-50 p-2.5 rounded-lg border border-rose-200 text-[#D9261C] flex-shrink-0">
               <Radio className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs font-bold text-white">毫秒級即時監控</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">跨介面高頻數據寫入與 PLC 交握</div>
+              <div className="text-xs font-bold text-slate-900">毫秒級即時監控</div>
+              <div className="text-[11px] text-slate-500 mt-0.5">跨介面高頻數據寫入與 PLC 交握</div>
             </div>
           </div>
         </div>
 
+        {/* 四大方案選單卡片網格 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {solutionsList.map((item) => {
             const IconComponent = item.icon;
@@ -671,22 +722,23 @@ function SolutionsOverviewSection() {
             return (
               <div
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`group relative rounded-2xl overflow-hidden border cursor-pointer transition-all duration-500 flex flex-col justify-between h-60 ${
+                onClick={() => handleSolutionSelect(item.id)}
+                className={`group relative rounded-2xl overflow-hidden border cursor-pointer transition-all duration-300 flex flex-col justify-between h-64 shadow-md ${
                   isActive
-                    ? 'border-[#EA9512] shadow-2xl ring-2 ring-[#EA9512]/50'
-                    : 'border-slate-800/80 opacity-75 hover:opacity-100 hover:border-slate-600'
+                    ? 'border-[#EA9512] ring-2 ring-[#EA9512]/60 shadow-xl scale-[1.01]'
+                    : 'border-slate-200 opacity-85 hover:opacity-100 hover:border-slate-400'
                 }`}
               >
                 <img 
                   src={item.imageUrl} 
                   alt={item.title}
+                  onError={(e) => { (e.target as HTMLImageElement).src = fallbackImageUrl; }}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className={`absolute inset-0 transition-opacity ${isActive ? 'bg-gradient-to-t from-[#070d19] via-[#070d19]/85 to-[#070d19]/40' : 'bg-gradient-to-t from-[#070d19] via-[#070d19]/90 to-[#070d19]/60'}`}></div>
+                <div className={`absolute inset-0 transition-opacity ${isActive ? 'bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/30' : 'bg-gradient-to-t from-slate-950 via-slate-950/85 to-slate-950/50'}`}></div>
 
                 <div className="relative z-10 p-4 flex justify-between items-start">
-                  <div className={`p-2 rounded-lg ${isActive ? 'bg-[#EA9512] text-slate-950 font-bold' : 'bg-slate-900/80 text-slate-300 backdrop-blur'}`}>
+                  <div className={`p-2 rounded-lg ${isActive ? 'bg-[#EA9512] text-slate-950 font-bold' : 'bg-slate-900/80 text-white backdrop-blur'}`}>
                     <IconComponent className="w-5 h-5" />
                   </div>
                   {item.isFlagship && (
@@ -696,20 +748,30 @@ function SolutionsOverviewSection() {
                   )}
                 </div>
 
-                <div className="relative z-10 p-4 space-y-1">
-                  <div className="text-[10px] font-mono text-[#EA9512] uppercase tracking-wider">
+                <div className="relative z-10 p-4 space-y-2">
+                  <div className="text-[10px] font-mono text-[#EA9512] uppercase tracking-wider font-bold">
                     {item.subtitle}
                   </div>
                   <h3 className="text-base font-bold text-white leading-snug">
                     {item.title}
                   </h3>
+
+                  {/* 行動端引導動作列：解決手機觀看無反應疑慮 */}
+                  <div className="lg:hidden pt-1 flex items-center gap-1 text-[11px] font-mono text-cyan-300 font-semibold animate-pulse">
+                    <span>{isActive ? '即將顯示規格' : '點擊檢視詳細規格'}</span>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
 
-        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 backdrop-blur shadow-2xl">
+        {/* 詳細資料卡片面板（附加錨點元件位址：scroll-mt-24 確保頂部導覽列不遮擋） */}
+        <div 
+          ref={detailPanelRef} 
+          className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xl scroll-mt-24"
+        >
           <div className="flex flex-col lg:flex-row gap-8 justify-between">
             <div className="lg:w-7/12 space-y-6">
               <div>
@@ -718,32 +780,32 @@ function SolutionsOverviewSection() {
                     {selectedSolution.subtitle}
                   </span>
                   {selectedSolution.isFlagship && (
-                    <span className="text-[10px] bg-rose-500/10 text-[#D9261C] border border-rose-500/30 px-2 py-0.5 rounded font-bold">
+                    <span className="text-[10px] bg-rose-50 text-[#D9261C] border border-rose-200 px-2 py-0.5 rounded font-bold">
                       FLAGSHIP SERVICE
                     </span>
                   )}
                 </div>
                 
-                <h3 className="text-2xl font-bold text-white mt-1">
+                <h3 className="text-2xl font-bold text-slate-900 mt-1">
                   {selectedSolution.title}
                 </h3>
                 
-                <p className="text-xs font-mono text-cyan-400 mt-2 bg-cyan-950/30 border border-cyan-900/40 px-3 py-1.5 rounded-lg inline-block">
+                <p className="text-xs font-mono text-cyan-700 mt-2 bg-cyan-50 border border-cyan-200 px-3 py-1.5 rounded-lg inline-block font-semibold">
                   {selectedSolution.tagline}
                 </p>
               </div>
 
-              <p className="text-slate-300 text-sm leading-relaxed">
+              <p className="text-slate-600 text-sm leading-relaxed">
                 {selectedSolution.description}
               </p>
 
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-[#EA9512]" /> 核心技術優勢與承諾
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {selectedSolution.guarantees.map((g, idx) => (
-                    <div key={idx} className="flex items-start gap-2 bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/80 text-xs text-slate-300">
+                    <div key={idx} className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-xs text-slate-700">
                       <CheckCircle2 className="w-3.5 h-3.5 text-[#EA9512] flex-shrink-0 mt-0.5" />
                       <span>{g}</span>
                     </div>
@@ -752,10 +814,10 @@ function SolutionsOverviewSection() {
               </div>
 
               <div className="pt-2">
-                <span className="text-xs font-mono text-slate-400 mr-3">支援介面 / 協定:</span>
+                <span className="text-xs font-mono text-slate-500 mr-3 font-bold">支援介面 / 協定:</span>
                 <div className="inline-flex flex-wrap gap-1.5 mt-2">
                   {selectedSolution.protocols.map((p, idx) => (
-                    <span key={idx} className="text-[11px] font-mono bg-slate-800 text-slate-200 px-2.5 py-1 rounded border border-slate-700">
+                    <span key={idx} className="text-[11px] font-mono bg-slate-100 text-slate-700 px-2.5 py-1 rounded border border-slate-200 font-medium">
                       {p}
                     </span>
                   ))}
@@ -763,18 +825,18 @@ function SolutionsOverviewSection() {
               </div>
             </div>
 
-            <div className="lg:w-5/12 bg-[#030712] border border-slate-800 p-6 rounded-xl flex flex-col justify-between">
+            <div className="lg:w-5/12 bg-slate-900 text-white border border-slate-800 p-6 rounded-xl flex flex-col justify-between shadow-lg">
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                   <span className="text-xs font-bold text-white flex items-center gap-2">
                     <FileSpreadsheet className="w-4 h-4 text-cyan-400" /> 專案實績與驗證模組
                   </span>
-                  <span className="text-[10px] font-mono text-slate-500">1996-2026 VERIFIED</span>
+                  <span className="text-[10px] font-mono text-slate-400">1996-2026 VERIFIED</span>
                 </div>
 
                 <div className="mt-4 space-y-3">
                   {selectedSolution.verifiedCases.map((vc, idx) => (
-                    <div key={idx} className="bg-slate-900/80 p-3 rounded-lg border border-slate-800 flex items-start gap-3">
+                    <div key={idx} className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex items-start gap-3">
                       <span className="text-xs font-mono text-[#EA9512] font-bold mt-0.5">0{idx + 1}.</span>
                       <span className="text-xs text-slate-300 leading-normal">{vc}</span>
                     </div>
@@ -782,12 +844,12 @@ function SolutionsOverviewSection() {
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-slate-800/80 space-y-2">
+              <div className="mt-6 pt-4 border-t border-slate-800 space-y-2">
                 <a
                   href="#contact"
                   className="w-full inline-flex items-center justify-center gap-2 bg-[#EA9512] hover:bg-amber-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20 text-xs"
                 >
-                  預約架構師評估 <ArrowRight className="w-4 h-4" />
+                  預約技術評估 <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
             </div>
@@ -800,23 +862,21 @@ function SolutionsOverviewSection() {
 
 function CasesHighlightSection() {
   return (
-    <section id="cases" className="py-20 md:py-28 bg-[#030712] text-slate-100 relative overflow-hidden border-b border-slate-800/80">
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[#EA9512]/5 blur-[160px] rounded-full pointer-events-none"></div>
-
+    <section id="cases" className="py-20 md:py-28 bg-white text-slate-900 relative overflow-hidden border-b border-slate-200">
       <Container className="relative z-10 space-y-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-800 pb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200 pb-8">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-amber-500/30 text-[#EA9512] text-xs font-mono tracking-wide">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-[#EA9512] text-xs font-mono tracking-wide font-bold">
               <FolderCheck className="w-3.5 h-3.5 text-[#EA9512]" />
               VERIFIED SUCCESS STORIES
             </div>
             
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
               產業落地與成功案例實績
             </h2>
           </div>
 
-          <p className="text-slate-400 text-xs sm:text-sm max-w-md leading-relaxed">
+          <p className="text-slate-600 text-xs sm:text-sm max-w-md leading-relaxed">
             深耕工業自動化 30 年，資治資訊已協助車用電子、高階 SMT、食品加工與實驗室完成數百項連通與數據化專案。
           </p>
         </div>
@@ -825,19 +885,20 @@ function CasesHighlightSection() {
           {casesData.map((item) => (
             <div 
               key={item.id}
-              className="group bg-slate-900/80 border border-slate-800 hover:border-slate-700 rounded-2xl overflow-hidden transition-all duration-300 backdrop-blur flex flex-col justify-between shadow-xl"
+              className="group bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-md hover:shadow-xl"
             >
               <div>
                 <div className="relative h-60 overflow-hidden">
                   <img 
                     src={item.imageUrl} 
                     alt={item.title}
+                    onError={(e) => { (e.target as HTMLImageElement).src = fallbackImageUrl; }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
 
                   <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
-                    <span className="text-[10px] font-mono bg-slate-950/80 text-cyan-400 border border-cyan-800/50 px-2.5 py-1 rounded backdrop-blur font-semibold">
+                    <span className="text-[10px] font-mono bg-slate-900/90 text-cyan-300 border border-cyan-700/50 px-2.5 py-1 rounded backdrop-blur font-semibold">
                       {item.category}
                     </span>
                     <span className="text-[10px] font-mono bg-[#EA9512] text-slate-950 font-bold px-2.5 py-1 rounded shadow">
@@ -845,44 +906,44 @@ function CasesHighlightSection() {
                     </span>
                   </div>
 
-                  <div className="absolute bottom-3 left-4 text-xs font-mono text-slate-300 flex items-center gap-1.5">
+                  <div className="absolute bottom-3 left-4 text-xs font-mono text-slate-200 flex items-center gap-1.5">
                     <Cpu className="w-3.5 h-3.5 text-[#EA9512]" /> {item.industry}
                   </div>
                 </div>
 
                 <div className="p-6 space-y-5">
-                  <h3 className="text-lg font-bold text-white leading-snug group-hover:text-[#EA9512] transition">
+                  <h3 className="text-lg font-bold text-slate-900 leading-snug group-hover:text-[#EA9512] transition">
                     {item.title}
                   </h3>
 
                   <div className="space-y-3 text-xs leading-relaxed">
-                    <div className="bg-rose-950/20 border border-rose-900/30 p-3 rounded-xl">
+                    <div className="bg-rose-50 border border-rose-200 p-3 rounded-xl">
                       <span className="font-bold text-[#D9261C] block mb-1">【客戶現場痛點】</span>
-                      <p className="text-slate-300">{item.problem}</p>
+                      <p className="text-slate-700">{item.problem}</p>
                     </div>
 
-                    <div className="bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
-                      <span className="font-bold text-cyan-400 block mb-1">【資治解決方案】</span>
-                      <p className="text-slate-300">{item.solution}</p>
+                    <div className="bg-cyan-50 border border-cyan-200 p-3 rounded-xl">
+                      <span className="font-bold text-cyan-800 block mb-1">【資治解決方案】</span>
+                      <p className="text-slate-700">{item.solution}</p>
                     </div>
                   </div>
 
                   <div className="space-y-2 pt-1">
-                    <span className="text-[11px] font-mono text-slate-400 font-bold uppercase tracking-wider block">
+                    <span className="text-[11px] font-mono text-slate-500 font-bold uppercase tracking-wider block">
                       可量化效益與成果：
                     </span>
                     {item.impacts.map((imp, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs text-slate-300">
+                      <div key={idx} className="flex items-start gap-2 text-xs text-slate-700">
                         <CheckCircle2 className="w-3.5 h-3.5 text-[#EA9512] flex-shrink-0 mt-0.5" />
                         <span>{imp}</span>
                       </div>
                     ))}
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800/80 flex items-center gap-2 flex-wrap text-[11px] font-mono text-slate-400">
-                    <span className="text-slate-500">對接硬體/介面:</span>
+                  <div className="pt-2 border-t border-slate-200 flex items-center gap-2 flex-wrap text-[11px] font-mono text-slate-500">
+                    <span className="text-slate-400 font-bold">對接硬體/介面:</span>
                     {item.hardware.map((hw, idx) => (
-                      <span key={idx} className="bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-slate-300">
+                      <span key={idx} className="bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-700">
                         {hw}
                       </span>
                     ))}
@@ -893,9 +954,9 @@ function CasesHighlightSection() {
               <div className="p-6 pt-0">
                 <a 
                   href="#contact" 
-                  className="w-full inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-xl border border-slate-700 transition text-xs group-hover:border-[#EA9512]/50 group-hover:text-amber-400"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl transition text-xs shadow-md"
                 >
-                  預約類似案例架構評估 <ChevronRight className="w-3.5 h-3.5" />
+                  預約評估 <ChevronRight className="w-3.5 h-3.5 text-[#EA9512]" />
                 </a>
               </div>
             </div>
@@ -908,39 +969,36 @@ function CasesHighlightSection() {
 
 function CTASection() {
   return (
-    <section id="contact" className="py-20 md:py-28 bg-[#070d19] text-slate-100 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b10_1px,transparent_1px),linear-gradient(to_bottom,#1e293b10_1px,transparent_1px)] bg-[size:3rem_3rem]"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#EA9512]/10 blur-[180px] rounded-full pointer-events-none"></div>
-
+    <section id="contact" className="py-20 md:py-28 bg-[#f8fafc] text-slate-900 relative overflow-hidden">
       <Container className="relative z-10">
-        <div className="bg-gradient-to-b from-slate-900/90 to-[#030712]/95 border border-slate-800 rounded-3xl p-8 sm:p-12 shadow-2xl backdrop-blur relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#EA9512] to-transparent"></div>
+        <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-[#EA9512] to-amber-500"></div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950 border border-amber-500/30 text-[#EA9512] text-xs font-mono tracking-wide">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-[#EA9512] text-xs font-mono font-bold tracking-wide">
                 <Headset className="w-3.5 h-3.5 text-[#EA9512]" />
                 {ctaContent.badge}
               </div>
 
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
                 {ctaContent.title}
               </h2>
 
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
+              <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-2xl">
                 {ctaContent.description}
               </p>
 
-              <div className="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-800/80">
+              <div className="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-200">
                 {ctaContent.assurances.map((item, idx) => {
                   const IconComp = item.icon;
                   return (
                     <div key={idx} className="space-y-1">
-                      <div className="flex items-center gap-2 text-xs font-bold text-white">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
                         <IconComp className="w-4 h-4 text-[#EA9512] flex-shrink-0" />
                         <span>{item.title}</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 leading-normal pl-6">
+                      <p className="text-[11px] text-slate-500 leading-normal pl-6">
                         {item.desc}
                       </p>
                     </div>
@@ -949,7 +1007,7 @@ function CTASection() {
               </div>
             </div>
 
-            <div className="lg:col-span-5 bg-slate-950/80 border border-slate-800/90 rounded-2xl p-6 sm:p-8 space-y-6 flex flex-col justify-between backdrop-blur">
+            <div className="lg:col-span-5 bg-slate-900 text-white border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 flex flex-col justify-between shadow-xl">
               <div className="space-y-3">
                 <span className="text-xs font-mono text-cyan-400 font-semibold tracking-wider uppercase block">
                   FAST TRACK CONSULTATION
@@ -958,34 +1016,36 @@ function CTASection() {
                   立即預約一對一技術評估
                 </h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  加入資治資訊 LINE 官方帳號或撥打專線，我們的架構師團隊將第一時間為您分析串接可行性。
+                  加入資治資訊 LINE 官方帳號或撥打專線，我們的技術團隊將第一時間為您分析串接可行性。
                 </p>
               </div>
 
               <div className="space-y-3 pt-2">
+                {/* LINE 官方帳號 */}
                 <a
                   href={ctaContent.lineUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white font-extrabold px-6 py-3.5 rounded-xl transition shadow-xl shadow-emerald-950/20 text-sm"
+                  className="w-full inline-flex items-center justify-center gap-2.5 bg-[#06C755] hover:bg-[#05b34c] text-white font-extrabold px-6 py-3.5 rounded-xl transition shadow-xl text-sm"
                 >
                   <MessageSquare className="w-4 h-4 fill-current" />
                   加入 LINE 官方帳號 (ID: {ctaContent.lineId})
                 </a>
 
+                {/* 電話專線 */}
                 <a
                   href={`tel:${ctaContent.phone.replace(/-/g, '')}`}
-                  className="w-full inline-flex items-center justify-center gap-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 font-medium px-4 py-3 rounded-xl transition text-xs"
+                  className="w-full inline-flex items-center justify-center gap-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium px-4 py-3 rounded-xl transition text-xs"
                 >
                   <Phone className="w-3.5 h-3.5 text-[#EA9512]" /> 電話專線：{ctaContent.phone}
                 </a>
               </div>
 
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
+              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
                 <span className="flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-slate-500" /> 台中烏日總公司
+                  <Building2 className="w-3.5 h-3.5 text-[#EA9512]" /> 台中烏日總公司
                 </span>
-                <span className="text-slate-500">LINE: {ctaContent.lineId}</span>
+                <span className="text-slate-400">LINE: {ctaContent.lineId}</span>
               </div>
             </div>
           </div>
@@ -1046,19 +1106,27 @@ function Footer() {
 
             <div className="border-t border-slate-800 pt-3 space-y-2">
               <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-[#06C755]" /> LINE 官方帳號
+                <MessageSquare className="w-4 h-4 text-[#06C755]" /> 社群與諮詢管道
               </h4>
               <p className="text-slate-300 font-mono text-sm font-bold">
-                {siteConfig.contact.lineId}
+                LINE: {siteConfig.contact.lineId}
               </p>
-              <div className="pt-1">
+              <div className="pt-1 flex flex-wrap gap-2">
                 <a 
                   href={siteConfig.contact.lineUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-[#06C755] hover:bg-[#05b34c] text-white font-bold px-4 py-2 rounded-lg transition text-xs shadow-md"
+                  className="inline-flex items-center gap-1.5 bg-[#06C755] hover:bg-[#05b34c] text-white font-bold px-3 py-1.5 rounded-lg transition text-xs shadow-md"
                 >
-                  立即加入 LINE 諮詢 <ArrowRight className="w-3.5 h-3.5" />
+                  LINE 諮詢 <ArrowRight className="w-3 h-3" />
+                </a>
+                <a 
+                  href={siteConfig.contact.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold px-3 py-1.5 rounded-lg transition text-xs shadow-md"
+                >
+                  <FacebookIcon className="w-3.5 h-3.5 fill-current" /> FB 粉絲專頁
                 </a>
               </div>
             </div>
@@ -1074,7 +1142,7 @@ function Footer() {
 // ==========================================
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#070d19] text-slate-100 font-sans selection:bg-[#EA9512] selection:text-slate-950 overflow-x-hidden">
+    <main className="min-h-screen bg-white font-sans selection:bg-[#EA9512] selection:text-slate-950 overflow-x-hidden">
       <Header />
       <HeroSection />
       <PainPointsSection />
